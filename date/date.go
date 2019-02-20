@@ -13,6 +13,8 @@ type Date int64
 var (
 	// Nil represents a nil/null/undefined date
 	Nil = Date(-2)
+	// NilUnit represents the year, month and day unit values for date.Nil
+	NilUnit = -2
 	// Min represents the minimum supported date value, which is day 0 on the Julian calendar or
 	// 1/1/1753 on the Gregorian calendar.
 	Min = Date(2361331)
@@ -102,6 +104,7 @@ func ToUnits(d Date) (year, month, day int) {
 	return julianToGregorian(int64(d))
 }
 
+// Year returns the year (between 1753 and 9999) or date.NilUnit if this is a nil date
 func (dt Date) Year() int {
 	if dt == Nil {
 		return -2
