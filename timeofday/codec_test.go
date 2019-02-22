@@ -3,6 +3,7 @@ package timeofday
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -101,6 +102,64 @@ func TestUnmarshalText(t *testing.T) {
 			}
 			if got != tc.expected {
 				tt.Errorf("Expected %v, got %v", tc.expected, got)
+			}
+		})
+	}
+}
+
+func TestMarshalJSON(t *testing.T) {
+	cases := []struct {
+		name     string
+		v        TimeOfDay
+		expected []byte
+	}{
+		{"zero value", ZeroTime, []byte(`"00:00:00"`)},
+		{"min value", MinTime, []byte(`"00:00:00"`)},
+		{"max value", MaxTime, []byte(`"23:59:59.999999999"`)},
+		{"12:34:56.789012345", Must(FromUnits(12, 34, 56, 789012345)), []byte(`"12:34:56.789012345"`)},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(tt *testing.T) {
+			got, err := json.Marshal(tc.v)
+			if err != nil {
+				tt.Errorf("Unexpected error %v", err)
+			}
+			if !bytes.Equal(got, tc.expected) {
+				tt.Errorf("Expected %s, got %s", string(tc.expected), string(got))
+			}
+		})
+	}
+}
+
+func TestUnmarshalJSON(t *testing.T) {
+	cases := []struct {
+		name     string
+		d        []byte
+		expected TimeOfDay
+		err      error
+	}{
+		{"00:00:00", []byte(`"00:00:00"`), ZeroTime, nil},
+		{"23:59:59.999999999", []byte(`"23:59:59.999999999"`), MaxTime, nil},
+		{"12:34:56.789012345", []byte(`"12:34:56.789012345"`), Must(FromUnits(12, 34, 56, 789012345)), nil},
+		{"24:00:00", []byte(`"24:00:00"`), ZeroTime, ErrInvalidTimeFormat},
+		{"garbage input", []byte(`"nafklsd8234as"`), ZeroTime, ErrInvalidTimeFormat},
+		{"empty string", []byte(`""`), ZeroTime, ErrInvalidTextDataLen},
+		{"short input", []byte(`"12"`), ZeroTime, ErrInvalidTextDataLen},
+		{"long input", []byte(`"1234567890123456789"`), ZeroTime, ErrInvalidTextDataLen},
+		{"JSON 'null'", []byte(`null`), ZeroTime, nil},
+		{"JSON number", []byte("42"), ZeroTime, ErrInvalidTextData},
+		{"JSON array", []byte("[]"), ZeroTime, ErrInvalidTextData},
+		{"JSON object", []byte("{}"), ZeroTime, ErrInvalidTextData},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(tt *testing.T) {
+			var got TimeOfDay
+			err := json.Unmarshal(tc.d, &got)
+			if errors.Cause(err) != tc.err {
+				tt.Errorf("Expected error %v, got %v", tc.err, err)
+			}
+			if got != tc.expected {
+				tt.Errorf("Expected %s, got %s", tc.expected, got)
 			}
 		})
 	}

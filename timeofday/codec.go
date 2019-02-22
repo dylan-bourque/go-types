@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"encoding"
 	"encoding/binary"
+	"encoding/json"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -16,6 +19,9 @@ var (
 	// ErrInvalidTextDataLen is returned from timeofday.TimeOfDay.UnmarshalText() when the passed-in byte slice
 	// is not between 8 and 18 bytes long
 	ErrInvalidTextDataLen = errors.Errorf("timeofday.TimeOfDay: text data must be bewteen 8 and 18 bytes")
+	// ErrInvalidTextData is returned from timeofday.TimeOfDay.UnmarshalJSON() when the passed-in byte slice
+	// does not contain a string
+	ErrInvalidTextData = errors.Errorf("timeofday.TimeOfDay: can only decode JSON strings")
 	// ErrInvalidTimeFormat is returned from timeofday.TimeOfDay.UnmarshalText() when the passed-in byte slice
 	// is not formatted correctly
 	ErrInvalidTimeFormat = errors.Errorf("timeofday.TimeOfDay: text data was not in the correct format")
@@ -26,6 +32,8 @@ var _ encoding.TextMarshaler = (*TimeOfDay)(nil)
 var _ encoding.TextUnmarshaler = (*TimeOfDay)(nil)
 var _ encoding.BinaryMarshaler = (*TimeOfDay)(nil)
 var _ encoding.BinaryUnmarshaler = (*TimeOfDay)(nil)
+var _ json.Marshaler = (*TimeOfDay)(nil)
+var _ json.Unmarshaler = (*TimeOfDay)(nil)
 
 // MarshalText implements the encoding.TextMarshaler interface for timeofday.TimeOfDay values.
 //
@@ -45,6 +53,11 @@ func (t TimeOfDay) MarshalText() ([]byte, error) {
 func (t *TimeOfDay) UnmarshalText(text []byte) error {
 	if l := len(text); l < 8 || l > 18 {
 		return ErrInvalidTextDataLen
+	}
+	// explicitly handle JSON "null"
+	if bytes.Equal(text, []byte("null")) {
+		t.d = time.Duration(0)
+		return nil
 	}
 	// defer to stdlib to parse the time string in UTC (so no DST)
 	tv, err := time.ParseInLocation(`15:04:05.999999999`, string(text), time.UTC)
@@ -94,4 +107,26 @@ func (t *TimeOfDay) UnmarshalBinary(data []byte) error {
 	// all is well
 	t.d = dur
 	return nil
+}
+
+// MarshalJSON implements the json.Marshaler interface for timeofday.TimeOfDay values.  The JSON
+// encoding is the same as MarshalText().
+func (t TimeOfDay) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf("%q", t)), nil
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface for timeofday.TimeOfDay values.
+//
+// If the value is the special JSON null token, t is set to timeofday.Zero.  All other values are
+// delegated to UnmarshalText().
+func (t *TimeOfDay) UnmarshalJSON(p []byte) error {
+	if bytes.Equal(p, []byte("null")) {
+		t.d = time.Duration(0)
+		return nil
+	}
+	var s string
+	if err := json.NewDecoder(bytes.NewReader(p)).Decode(&s); err != nil {
+		return errors.Wrapf(ErrInvalidTextData, "%v", err)
+	}
+	return t.UnmarshalText([]byte(strings.Trim(s, `"`)))
 }
