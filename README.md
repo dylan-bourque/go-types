@@ -7,6 +7,7 @@ Package `go-types` provides idomatic Go implementations of useful aggregate type
 
 ### Provided Types
 This table contains a summary of the types provided by this package.  See the sub-package level `README.md` files for more details of the individual types.
+
 | Type | Description |
 |------|-------------|
 | [`timeofday.TimeOfDay`](timeofday/README.md) | A type that represents a specific time of day - in the range [00:00:00 .. 23:59:59.999999999) - independent of date, time zone and Daylight Savings Time concerns. |
