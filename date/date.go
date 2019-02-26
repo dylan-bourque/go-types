@@ -28,10 +28,6 @@ var (
 )
 
 var (
-	secondsPerDay = 60 * 60 * 24
-)
-
-var (
 	// ErrInvalidDateUnit is returned when an out-of-range date unit value is used
 	ErrInvalidDateUnit = errors.Errorf("One or more of the specified date units were invalid")
 )
@@ -146,8 +142,4 @@ func daysInMonth(y, m int) int {
 		d++
 	}
 	return d
-}
-
-func isValidDay(y, m, d int) bool {
-	return d >= 1 && d <= daysInMonth(y, m)
 }
