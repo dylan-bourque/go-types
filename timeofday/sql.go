@@ -53,7 +53,7 @@ func (t NullTimeOfDay) Value() (driver.Value, error) {
 // Scan implements the sql.Scanner interface for NullTimeOfDay values
 func (t *NullTimeOfDay) Scan(src interface{}) error {
 	if src == nil {
-		t.TimeOfDay, t.Valid = ZeroTime, false
+		t.TimeOfDay, t.Valid = Zero, false
 		return nil
 	}
 	if err := t.TimeOfDay.Scan(src); err != nil {
@@ -74,7 +74,7 @@ func (t NullTimeOfDay) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the json.Unmarshaler interface for NullTimeOfDay values
 func (t *NullTimeOfDay) UnmarshalJSON(d []byte) error {
 	if bytes.Equal(d, []byte("null")) {
-		t.TimeOfDay, t.Valid = ZeroTime, false
+		t.TimeOfDay, t.Valid = Zero, false
 		return nil
 	}
 

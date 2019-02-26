@@ -54,11 +54,6 @@ func (t *TimeOfDay) UnmarshalText(text []byte) error {
 	if l := len(text); l < 8 || l > 18 {
 		return ErrInvalidTextDataLen
 	}
-	// explicitly handle JSON "null"
-	if bytes.Equal(text, []byte("null")) {
-		t.d = time.Duration(0)
-		return nil
-	}
 	// defer to stdlib to parse the time string in UTC (so no DST)
 	tv, err := time.ParseInLocation(`15:04:05.999999999`, string(text), time.UTC)
 	if err != nil {

@@ -17,12 +17,12 @@ type TimeOfDay struct {
 }
 
 var (
-	// ZeroTime defines a "zero" clock time, which is equivalent to clock.MinTime
-	ZeroTime = TimeOfDay{}
-	// MinTime defines the minimum supported clock time, which is midnight (00:00:00)
-	MinTime = TimeOfDay{d: 0}
-	// MaxTime defines the maximum supported clock time, which is 1 nanosecond before midnight (23:59:59.999999999)
-	MaxTime = TimeOfDay{d: time.Duration(24*time.Hour - time.Nanosecond)}
+	// Zero defines a "zero" clock time, which is equivalent to clock.Min
+	Zero = TimeOfDay{}
+	// Min defines the minimum supported clock time, which is midnight (00:00:00)
+	Min = TimeOfDay{d: 0}
+	// Max defines the maximum supported clock time, which is 1 nanosecond before midnight (23:59:59.999999999)
+	Max = TimeOfDay{d: time.Duration(24*time.Hour - time.Nanosecond)}
 )
 var (
 	// ErrInvalidUnit indicates that one or more of the specified unit values are out of the allowed range
@@ -83,7 +83,7 @@ func (t TimeOfDay) ToUnits() (h, m, s int, ns int64) {
 // of the supported range - [00:00:00 - 24:00:00) - an error is returned
 func FromUnits(h, m, s int, ns int64) (TimeOfDay, error) {
 	if !IsValidUnits(h, m, s, ns) {
-		return ZeroTime, ErrInvalidUnit
+		return Zero, ErrInvalidUnit
 	}
 	return TimeOfDay{
 		d: time.Duration((int64(h) * nsecsPerHour) + (int64(m) * nsecsPerMinute) + (int64(s) * nsecsPerSecond) + ns),
@@ -109,7 +109,7 @@ func ToDuration(t TimeOfDay) time.Duration {
 // If the provided duration is outside of the supported range - [00:00:00 - 24:00:00) - an error is returned.
 func FromDuration(d time.Duration) (TimeOfDay, error) {
 	if !IsValidDuration(d) {
-		return ZeroTime, ErrInvalidDuration
+		return Zero, ErrInvalidDuration
 	}
 	return TimeOfDay{d: d}, nil
 }
@@ -173,8 +173,11 @@ func fmtFrac(v uint64) string {
 func (t TimeOfDay) Add(d time.Duration) TimeOfDay {
 	res := time.Duration(t.d + d)
 	// for a positive result, step backwards until we're within the supported range
-	for ; res > 24*time.Hour; res -= 24 * time.Hour {
+	if res >= 24*time.Hour {
+		res %= 24 * time.Hour
 	}
+	// for ; res > 24*time.Hour; res -= 24 * time.Hour {
+	// }
 	// for a negative result, step forward until we're within the supported range
 	for ; res < 0; res += 24 * time.Hour {
 	}

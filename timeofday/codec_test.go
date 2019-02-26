@@ -16,9 +16,9 @@ func TestMarshalText(t *testing.T) {
 		v        TimeOfDay
 		expected []byte
 	}{
-		{"zero value", ZeroTime, []byte("00:00:00")},
-		{"min value", MinTime, []byte("00:00:00")},
-		{"max value", MaxTime, []byte("23:59:59.999999999")},
+		{"zero value", Zero, []byte("00:00:00")},
+		{"min value", Min, []byte("00:00:00")},
+		{"max value", Max, []byte("23:59:59.999999999")},
 		{"12:34:56.789012345", Must(FromUnits(12, 34, 56, 789012345)), []byte("12:34:56.789012345")},
 		{"12:34:56", Must(FromUnits(12, 34, 56, 0)), []byte("12:34:56")},
 		{"12:34:56.1", Must(FromUnits(12, 34, 56, 100000000)), []byte("12:34:56.1")},
@@ -57,21 +57,21 @@ func TestUnmarshalText(t *testing.T) {
 		err      error
 	}{
 		// invalid buffer
-		{"nil buffer", nil, ZeroTime, ErrInvalidTextDataLen},
-		{"empty buffer", []byte{}, ZeroTime, ErrInvalidTextDataLen},
-		{"short buffer", []byte{1}, ZeroTime, ErrInvalidTextDataLen},
-		{"long buffer", []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}, ZeroTime, ErrInvalidTextDataLen},
+		{"nil buffer", nil, Zero, ErrInvalidTextDataLen},
+		{"empty buffer", []byte{}, Zero, ErrInvalidTextDataLen},
+		{"short buffer", []byte{1}, Zero, ErrInvalidTextDataLen},
+		{"long buffer", []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}, Zero, ErrInvalidTextDataLen},
 		// malformed text
-		{"incorrect format/first separator", []byte("00_00:00"), ZeroTime, ErrInvalidTimeFormat},
-		{"incorrect format/second separator", []byte("00:00_00"), ZeroTime, ErrInvalidTimeFormat},
-		{"incorrect format/fraction separator", []byte("00:00:00_0"), ZeroTime, ErrInvalidTimeFormat},
-		{"invalid value/hours overflow", []byte("24:00:00"), ZeroTime, ErrInvalidTimeFormat},
-		{"invalid value/minutes overflow", []byte("00:60:00"), ZeroTime, ErrInvalidTimeFormat},
-		{"invalid value/seconds overflow", []byte("00:00:60"), ZeroTime, ErrInvalidTimeFormat},
+		{"incorrect format/first separator", []byte("00_00:00"), Zero, ErrInvalidTimeFormat},
+		{"incorrect format/second separator", []byte("00:00_00"), Zero, ErrInvalidTimeFormat},
+		{"incorrect format/fraction separator", []byte("00:00:00_0"), Zero, ErrInvalidTimeFormat},
+		{"invalid value/hours overflow", []byte("24:00:00"), Zero, ErrInvalidTimeFormat},
+		{"invalid value/minutes overflow", []byte("00:60:00"), Zero, ErrInvalidTimeFormat},
+		{"invalid value/seconds overflow", []byte("00:00:60"), Zero, ErrInvalidTimeFormat},
 		// valid text
-		{"zero value", []byte("00:00:00"), ZeroTime, nil},
-		{"min value", []byte("00:00:00"), MinTime, nil},
-		{"max value", []byte("23:59:59.999999999"), MaxTime, nil},
+		{"zero value", []byte("00:00:00"), Zero, nil},
+		{"min value", []byte("00:00:00"), Min, nil},
+		{"max value", []byte("23:59:59.999999999"), Max, nil},
 		{"12:34:56.789012345", []byte("12:34:56.789012345"), Must(FromUnits(12, 34, 56, 789012345)), nil},
 		{"12:34:56", []byte("12:34:56"), Must(FromUnits(12, 34, 56, 0)), nil},
 		{"12:34:56.1", []byte("12:34:56.1"), Must(FromUnits(12, 34, 56, 100000000)), nil},
@@ -113,9 +113,9 @@ func TestMarshalJSON(t *testing.T) {
 		v        TimeOfDay
 		expected []byte
 	}{
-		{"zero value", ZeroTime, []byte(`"00:00:00"`)},
-		{"min value", MinTime, []byte(`"00:00:00"`)},
-		{"max value", MaxTime, []byte(`"23:59:59.999999999"`)},
+		{"zero value", Zero, []byte(`"00:00:00"`)},
+		{"min value", Min, []byte(`"00:00:00"`)},
+		{"max value", Max, []byte(`"23:59:59.999999999"`)},
 		{"12:34:56.789012345", Must(FromUnits(12, 34, 56, 789012345)), []byte(`"12:34:56.789012345"`)},
 	}
 	for _, tc := range cases {
@@ -138,18 +138,18 @@ func TestUnmarshalJSON(t *testing.T) {
 		expected TimeOfDay
 		err      error
 	}{
-		{"00:00:00", []byte(`"00:00:00"`), ZeroTime, nil},
-		{"23:59:59.999999999", []byte(`"23:59:59.999999999"`), MaxTime, nil},
+		{"00:00:00", []byte(`"00:00:00"`), Zero, nil},
+		{"23:59:59.999999999", []byte(`"23:59:59.999999999"`), Max, nil},
 		{"12:34:56.789012345", []byte(`"12:34:56.789012345"`), Must(FromUnits(12, 34, 56, 789012345)), nil},
-		{"24:00:00", []byte(`"24:00:00"`), ZeroTime, ErrInvalidTimeFormat},
-		{"garbage input", []byte(`"nafklsd8234as"`), ZeroTime, ErrInvalidTimeFormat},
-		{"empty string", []byte(`""`), ZeroTime, ErrInvalidTextDataLen},
-		{"short input", []byte(`"12"`), ZeroTime, ErrInvalidTextDataLen},
-		{"long input", []byte(`"1234567890123456789"`), ZeroTime, ErrInvalidTextDataLen},
-		{"JSON 'null'", []byte(`null`), ZeroTime, nil},
-		{"JSON number", []byte("42"), ZeroTime, ErrInvalidTextData},
-		{"JSON array", []byte("[]"), ZeroTime, ErrInvalidTextData},
-		{"JSON object", []byte("{}"), ZeroTime, ErrInvalidTextData},
+		{"24:00:00", []byte(`"24:00:00"`), Zero, ErrInvalidTimeFormat},
+		{"garbage input", []byte(`"nafklsd8234as"`), Zero, ErrInvalidTimeFormat},
+		{"empty string", []byte(`""`), Zero, ErrInvalidTextDataLen},
+		{"short input", []byte(`"12"`), Zero, ErrInvalidTextDataLen},
+		{"long input", []byte(`"1234567890123456789"`), Zero, ErrInvalidTextDataLen},
+		{"JSON 'null'", []byte(`null`), Zero, nil},
+		{"JSON number", []byte("42"), Zero, ErrInvalidTextData},
+		{"JSON array", []byte("[]"), Zero, ErrInvalidTextData},
+		{"JSON object", []byte("{}"), Zero, ErrInvalidTextData},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(tt *testing.T) {
@@ -171,9 +171,9 @@ func TestMarshalBinary(t *testing.T) {
 		v        TimeOfDay
 		expected []byte
 	}{
-		{"zero value", ZeroTime, genBinaryDataFromDuration(time.Duration(0))},
-		{"min value", MinTime, genBinaryDataFromDuration(time.Duration(0))},
-		{"max value", MaxTime, genBinaryDataFromDuration(time.Duration(24*time.Hour - time.Nanosecond))},
+		{"zero value", Zero, genBinaryDataFromDuration(time.Duration(0))},
+		{"min value", Min, genBinaryDataFromDuration(time.Duration(0))},
+		{"max value", Max, genBinaryDataFromDuration(time.Duration(24*time.Hour - time.Nanosecond))},
 		{"12:34:56.789012345", Must(FromUnits(12, 34, 56, 789012345)), genBinaryDataFromDuration(time.Duration(12*time.Hour + 34*time.Minute + 56*time.Second + 789012345))},
 	}
 	for _, tc := range cases {
@@ -196,15 +196,15 @@ func TestUnmarshalBinary(t *testing.T) {
 		expected TimeOfDay
 		err      error
 	}{
-		{"nil-buffer", nil, ZeroTime, ErrInvalidBinaryDataLen},
-		{"empty-buffer", []byte{}, ZeroTime, ErrInvalidBinaryDataLen},
-		{"short-buffer", []byte{1}, ZeroTime, ErrInvalidBinaryDataLen},
-		{"long-buffer", []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}, ZeroTime, ErrInvalidBinaryDataLen},
-		{"invalid-duration-value/negative-underflow", genBinaryDataFromDuration(time.Duration(-1)), ZeroTime, ErrInvalidDuration},
-		{"invalid-duration-value/positive-overflow", genBinaryDataFromDuration(24 * time.Hour), ZeroTime, ErrInvalidDuration},
-		{"zero-value", genBinaryDataFromDuration(time.Duration(0)), ZeroTime, nil},
-		{"min-value", genBinaryDataFromDuration(time.Duration(0)), MinTime, nil},
-		{"max-value", genBinaryDataFromDuration(time.Duration(24*time.Hour - time.Nanosecond)), MaxTime, nil},
+		{"nil-buffer", nil, Zero, ErrInvalidBinaryDataLen},
+		{"empty-buffer", []byte{}, Zero, ErrInvalidBinaryDataLen},
+		{"short-buffer", []byte{1}, Zero, ErrInvalidBinaryDataLen},
+		{"long-buffer", []byte{1, 2, 3, 4, 5, 6, 7, 8, 9}, Zero, ErrInvalidBinaryDataLen},
+		{"invalid-duration-value/negative-underflow", genBinaryDataFromDuration(time.Duration(-1)), Zero, ErrInvalidDuration},
+		{"invalid-duration-value/positive-overflow", genBinaryDataFromDuration(24 * time.Hour), Zero, ErrInvalidDuration},
+		{"zero-value", genBinaryDataFromDuration(time.Duration(0)), Zero, nil},
+		{"min-value", genBinaryDataFromDuration(time.Duration(0)), Min, nil},
+		{"max-value", genBinaryDataFromDuration(time.Duration(24*time.Hour - time.Nanosecond)), Max, nil},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(tt *testing.T) {
