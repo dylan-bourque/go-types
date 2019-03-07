@@ -14,21 +14,21 @@ import (
 
 var (
 	// ErrUnsupportedSourceType is returned by .Scan() when the provided value cannot be converted to
-	// a timeofday.TimeOfDay value
-	ErrUnsupportedSourceType = errors.Errorf("Cannot convert the source data to a timeofday.TimeOfDay value")
+	// a timeofday.Value value
+	ErrUnsupportedSourceType = errors.Errorf("Cannot convert the source data to a timeofday.Value value")
 )
 
-// Value implements the driver.Valuer interface for TimeOfDay values.  The returned value is the
+// Value implements the driver.Valuer interface for Value values.  The returned value is the
 // default string encoding, hh:mm:ss.fffffffff.
-func (t TimeOfDay) Value() (driver.Value, error) {
+func (t Value) Value() (driver.Value, error) {
 	return t.String(), nil
 }
 
-// Scan implements the sql.Scanner interface for TimeOfDay values.
+// Scan implements the sql.Scanner interface for Value values.
 //
 // An 8-byte slice is handled by UnmarshalBinary() and a string is handled by UnmarshalText().  All other
 // values will return an error
-func (t *TimeOfDay) Scan(src interface{}) error {
+func (t *Value) Scan(src interface{}) error {
 	switch tv := src.(type) {
 	case []byte:
 		return t.UnmarshalBinary(tv)
@@ -39,10 +39,10 @@ func (t *TimeOfDay) Scan(src interface{}) error {
 	}
 }
 
-// NullTimeOfDay can be used with the standard sql package to represent a TimeOfDay value that can
+// NullTimeOfDay can be used with the standard sql package to represent a Value value that can
 // be NULL in the database.
 type NullTimeOfDay struct {
-	TimeOfDay TimeOfDay
+	TimeOfDay Value
 	Valid     bool
 }
 

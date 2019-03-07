@@ -17,7 +17,7 @@ import (
 func TestMarshalText(t *testing.T) {
 	cases := []struct {
 		name     string
-		v        TimeOfDay
+		v        Value
 		expected []byte
 	}{
 		{"zero value", Zero, []byte("00:00:00")},
@@ -57,7 +57,7 @@ func TestUnmarshalText(t *testing.T) {
 	cases := []struct {
 		name     string
 		d        []byte
-		expected TimeOfDay
+		expected Value
 		err      error
 	}{
 		// invalid buffer
@@ -98,7 +98,7 @@ func TestUnmarshalText(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(tt *testing.T) {
-			var got TimeOfDay
+			var got Value
 
 			err := got.UnmarshalText(tc.d)
 			if tc.err != errors.Cause(err) {
@@ -114,7 +114,7 @@ func TestUnmarshalText(t *testing.T) {
 func TestMarshalJSON(t *testing.T) {
 	cases := []struct {
 		name     string
-		v        TimeOfDay
+		v        Value
 		expected []byte
 	}{
 		{"zero value", Zero, []byte(`"00:00:00"`)},
@@ -139,7 +139,7 @@ func TestUnmarshalJSON(t *testing.T) {
 	cases := []struct {
 		name     string
 		d        []byte
-		expected TimeOfDay
+		expected Value
 		err      error
 	}{
 		{"00:00:00", []byte(`"00:00:00"`), Zero, nil},
@@ -157,7 +157,7 @@ func TestUnmarshalJSON(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(tt *testing.T) {
-			var got TimeOfDay
+			var got Value
 			err := json.Unmarshal(tc.d, &got)
 			if errors.Cause(err) != tc.err {
 				tt.Errorf("Expected error %v, got %v", tc.err, err)
@@ -172,7 +172,7 @@ func TestUnmarshalJSON(t *testing.T) {
 func TestMarshalBinary(t *testing.T) {
 	cases := []struct {
 		name     string
-		v        TimeOfDay
+		v        Value
 		expected []byte
 	}{
 		{"zero value", Zero, genBinaryDataFromDuration(time.Duration(0))},
@@ -197,7 +197,7 @@ func TestUnmarshalBinary(t *testing.T) {
 	cases := []struct {
 		name     string
 		d        []byte
-		expected TimeOfDay
+		expected Value
 		err      error
 	}{
 		{"nil-buffer", nil, Zero, ErrInvalidBinaryDataLen},
@@ -212,7 +212,7 @@ func TestUnmarshalBinary(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(tt *testing.T) {
-			var got TimeOfDay
+			var got Value
 
 			err := got.UnmarshalBinary(tc.d)
 			if tc.err != errors.Cause(err) {
@@ -225,7 +225,7 @@ func TestUnmarshalBinary(t *testing.T) {
 	}
 }
 
-// genBinaryDataFromDuration constructs the expected binary encoding for a given clock.TimeOfDay value
+// genBinaryDataFromDuration constructs the expected binary encoding for a given clock.Value value
 // from the provided time.Duration
 // . the value is 8 bytes containing a 64-bit integer in big endian byte order, containing the count
 //   of nanoseconds

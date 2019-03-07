@@ -11,50 +11,50 @@ import (
 	"github.com/pkg/errors"
 )
 
-// TimeOfDay defines a clock time (hh:mm:ss.fffffffff), independent of any date, time zone, Daylight Savings
-// TimeOfDay, etc. considerations.
+// Value defines a clock time (hh:mm:ss.fffffffff), independent of any date, time zone, Daylight Savings
+// Time, etc. considerations.
 //
 // Internally, the value is stored as a time.Duration value in the range [0ns...24h). The clock time is
 // derived by partitioning the total duration into hours, minutes, seconds and nanoseconds.
-type TimeOfDay struct {
+type Value struct {
 	d time.Duration
 }
 
 var (
 	// Zero defines a "zero" clock time, which is equivalent to clock.Min
-	Zero = TimeOfDay{}
+	Zero = Value{}
 	// Min defines the minimum supported clock time, which is midnight (00:00:00)
-	Min = TimeOfDay{d: 0}
+	Min = Value{d: 0}
 	// Max defines the maximum supported clock time, which is 1 nanosecond before midnight (23:59:59.999999999)
-	Max = TimeOfDay{d: time.Duration(24*time.Hour - time.Nanosecond)}
+	Max = Value{d: time.Duration(24*time.Hour - time.Nanosecond)}
 )
 var (
 	// ErrInvalidUnit indicates that one or more of the specified unit values are out of the allowed range
 	ErrInvalidUnit = errors.Errorf("One or more of the specified unit values are outside the valid range")
-	// ErrInvalidDuration indicates that a time.Duration value cannot be converted to a TimeOfDay value
-	ErrInvalidDuration = errors.Errorf("The specified duration is outside the valid range for a TimeOfDay value")
+	// ErrInvalidDuration indicates that a time.Duration value cannot be converted to a Value value
+	ErrInvalidDuration = errors.Errorf("The specified duration is outside the valid range for a Value value")
 )
 
-// Must is a helper that wraps a call to a function that returns (clock.TimeOfDay, error)
+// Must is a helper that wraps a call to a function that returns (clock.Value, error)
 // and panics if err is non-nil.
-func Must(t TimeOfDay, err error) TimeOfDay {
+func Must(t Value, err error) Value {
 	if err != nil {
 		panic(err)
 	}
 	return t
 }
 
-// IsValid returns true if t is a valid clock.TimeOfDay value in the range [00:00:00 .. 24:00:00), false otherwise
-func IsValid(t TimeOfDay) bool {
+// IsValid returns true if t is a valid clock.Value value in the range [00:00:00 .. 24:00:00), false otherwise
+func IsValid(t Value) bool {
 	return IsValidDuration(t.d)
 }
 
-// IsValid returns true if t is a valid clock.TimeOfDay value in the range [00:00:00 .. 24:00:00), false otherwise
-func (t TimeOfDay) IsValid() bool {
+// IsValid returns true if t is a valid clock.Value value in the range [00:00:00 .. 24:00:00), false otherwise
+func (t Value) IsValid() bool {
 	return IsValid(t)
 }
 
-// IsValidUnits returns whether or not the specified unit values are valid for a TimeOfDay value
+// IsValidUnits returns whether or not the specified unit values are valid for a Value value
 func IsValidUnits(h, m, s int, ns int64) bool {
 	return (0 <= h) && (h < 24) && (0 <= m) && (m < 60) && (0 <= s) && (s < 60) && (0 <= ns) && (ns < 1000000000)
 }
@@ -65,8 +65,8 @@ const (
 	nsecsPerHour   int64 = 60 * nsecsPerMinute
 )
 
-// ToUnits returns the hour, minute, second and fractional components of a TimeOfDay value
-func (t TimeOfDay) ToUnits() (h, m, s int, ns int64) {
+// ToUnits returns the hour, minute, second and fractional components of a Value value
+func (t Value) ToUnits() (h, m, s int, ns int64) {
 	ns = t.d.Nanoseconds()
 
 	uh := ns / nsecsPerHour
@@ -81,65 +81,65 @@ func (t TimeOfDay) ToUnits() (h, m, s int, ns int64) {
 	return int(uh), int(um), int(us), ns
 }
 
-// FromUnits constructs a TimeOfDay value from the provided unit values
+// FromUnits constructs a Value value from the provided unit values
 //
 // If the specified units cannot be converted to a time.Duration or is outside
 // of the supported range - [00:00:00 - 24:00:00) - an error is returned
-func FromUnits(h, m, s int, ns int64) (TimeOfDay, error) {
+func FromUnits(h, m, s int, ns int64) (Value, error) {
 	if !IsValidUnits(h, m, s, ns) {
 		return Zero, ErrInvalidUnit
 	}
-	return TimeOfDay{
+	return Value{
 		d: time.Duration((int64(h) * nsecsPerHour) + (int64(m) * nsecsPerMinute) + (int64(s) * nsecsPerSecond) + ns),
 	}, nil
 }
 
-// IsValidDuration returns whether or not the specified time.Duration value can be used as a TimeOfDay
+// IsValidDuration returns whether or not the specified time.Duration value can be used as a Value
 func IsValidDuration(d time.Duration) bool {
 	return d >= 0 && d < (24*time.Hour)
 }
 
 // ToDuration returns a time.Duration value that is equivalent to summing the hours, minutes, seconds,
 // and nanoseconds in t, or a duration of -1 nanosecond if t is invalid.
-func ToDuration(t TimeOfDay) time.Duration {
+func ToDuration(t Value) time.Duration {
 	if d := t.d; IsValidDuration(d) {
 		return d
 	}
 	return time.Duration(-1)
 }
 
-// FromDuration constructs a TimeOfDay value from the specified duration
+// FromDuration constructs a Value value from the specified duration
 //
 // If the provided duration is outside of the supported range - [00:00:00 - 24:00:00) - an error is returned.
-func FromDuration(d time.Duration) (TimeOfDay, error) {
+func FromDuration(d time.Duration) (Value, error) {
 	if !IsValidDuration(d) {
 		return Zero, ErrInvalidDuration
 	}
-	return TimeOfDay{d: d}, nil
+	return Value{d: d}, nil
 }
 
-// ToDateTimeUTC composes a clock.TimeOfDay value with the specified year, month and day
+// ToDateTimeUTC composes a clock.Value value with the specified year, month and day
 // in the UTC time zone.
-func (t TimeOfDay) ToDateTimeUTC(year int, month time.Month, day int) time.Time {
+func (t Value) ToDateTimeUTC(year int, month time.Month, day int) time.Time {
 	return t.ToDateTimeInLocation(year, month, day, time.UTC)
 }
 
-// ToDateTimeLocal composes a clock.TimeOfDay value with the specified year, month and day
+// ToDateTimeLocal composes a clock.Value value with the specified year, month and day
 // in the current local time zone.
-func (t TimeOfDay) ToDateTimeLocal(year int, month time.Month, day int) time.Time {
+func (t Value) ToDateTimeLocal(year int, month time.Month, day int) time.Time {
 	return t.ToDateTimeInLocation(year, month, day, time.Local)
 }
 
-// ToDateTimeInLocation composes the current clock.TimeOfDay value with the specified year, month, day and
+// ToDateTimeInLocation composes the current clock.Value value with the specified year, month, day and
 // location/time zone to generate a full time.Time value.
-func (t TimeOfDay) ToDateTimeInLocation(year int, month time.Month, day int, loc *time.Location) time.Time {
+func (t Value) ToDateTimeInLocation(year int, month time.Month, day int, loc *time.Location) time.Time {
 	h, m, s, ns := t.ToUnits()
 	return time.Date(year, month, day, h, m, s, int(ns), loc)
 }
 
-// String returns a string representation of the TimeOfDay value, formatted as "hh:mm:ss.fffffffff",
+// String returns a string representation of the Value value, formatted as "hh:mm:ss.fffffffff",
 // with the fractional portion omitted if it is zero or trailing zeros trimmed otherwise
-func (t TimeOfDay) String() string {
+func (t Value) String() string {
 	h, m, s, ns := t.ToUnits()
 	result := fmt.Sprintf("%02d:%02d:%02d", h, m, s)
 	if ns > 0 {
@@ -174,7 +174,7 @@ func fmtFrac(v uint64) string {
 }
 
 // Add adds the specified duration to t, normalizing the result to [00:00:00...24:00:00)
-func (t TimeOfDay) Add(d time.Duration) TimeOfDay {
+func (t Value) Add(d time.Duration) Value {
 	res := time.Duration(t.d + d)
 	// for a positive result, step backwards until we're within the supported range
 	if res >= 24*time.Hour {
@@ -185,10 +185,10 @@ func (t TimeOfDay) Add(d time.Duration) TimeOfDay {
 	// for a negative result, step forward until we're within the supported range
 	for ; res < 0; res += 24 * time.Hour {
 	}
-	return TimeOfDay{d: res}
+	return Value{d: res}
 }
 
 // Sub adds the specified duration from t, normalizing the result to [00:00:00...24:00:00)
-func (t TimeOfDay) Sub(d time.Duration) TimeOfDay {
+func (t Value) Sub(d time.Duration) Value {
 	return t.Add(-1 * d)
 }

@@ -123,7 +123,7 @@ func TestMustPanics(t *testing.T) {
 			t.Errorf("Expected to recover() %v, got %v", expected, got)
 		}
 	}()
-	Must(TimeOfDay{}, expected)
+	Must(Value{}, expected)
 	t.Error("Expected Must() to panic on error")
 }
 
@@ -131,7 +131,7 @@ func TestToDateTimeLocation(t *testing.T) {
 	now := time.Now()
 	cases := []struct {
 		name string
-		t    TimeOfDay
+		t    Value
 		y    int
 		m    time.Month
 		d    int
@@ -172,7 +172,7 @@ func TestToDateTime(t *testing.T) {
 	now := time.Now()
 	cases := []struct {
 		name     string
-		t        TimeOfDay
+		t        Value
 		y        int
 		m        time.Month
 		d        int
@@ -202,9 +202,9 @@ func TestToDateTime(t *testing.T) {
 func TestAdd(t *testing.T) {
 	cases := []struct {
 		name     string
-		t        TimeOfDay
+		t        Value
 		delta    time.Duration
-		expected TimeOfDay
+		expected Value
 	}{
 		{"min value/zero duration", Min, time.Duration(0), Min},
 		{"min value/one day duration", Min, 24 * time.Hour, Min},
@@ -244,9 +244,9 @@ func TestAdd(t *testing.T) {
 func TestSubtract(t *testing.T) {
 	cases := []struct {
 		name     string
-		t        TimeOfDay
+		t        Value
 		delta    time.Duration
-		expected TimeOfDay
+		expected Value
 	}{
 		{"min value/zero duration", Min, time.Duration(0), Min},
 		{"min value/one day duration", Min, 24 * time.Hour, Min},
@@ -307,7 +307,7 @@ func TestValidation(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(tt *testing.T) {
-			got := TimeOfDay{d: tc.d}
+			got := Value{d: tc.d}
 			if got.IsValid() != tc.valid {
 				t.Errorf(
 					"Expected %v to be %svalid",
@@ -327,11 +327,11 @@ func TestValidation(t *testing.T) {
 func TestToDuration(t *testing.T) {
 	type testCase struct {
 		name     string
-		t        TimeOfDay
+		t        Value
 		expected time.Duration
 	}
 	cases := []testCase{
-		{"invalid value", TimeOfDay{d: -1 * time.Hour}, time.Duration(-1)},
+		{"invalid value", Value{d: -1 * time.Hour}, time.Duration(-1)},
 	}
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	for h := 0; h < 24; h++ {

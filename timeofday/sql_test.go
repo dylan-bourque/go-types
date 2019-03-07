@@ -18,7 +18,7 @@ import (
 func TestValuer(t *testing.T) {
 	type testCase struct {
 		name     string
-		t        TimeOfDay
+		t        Value
 		err      error
 		expected string
 	}
@@ -56,7 +56,7 @@ func TestScanner(t *testing.T) {
 	type testCase struct {
 		name     string
 		d        interface{}
-		expected TimeOfDay
+		expected Value
 		err      error
 	}
 	cases := []testCase{
@@ -71,7 +71,7 @@ func TestScanner(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(tt *testing.T) {
-			var got TimeOfDay
+			var got Value
 			err := got.Scan(tc.d)
 			if errors.Cause(err) != tc.err {
 				tt.Errorf("Expected error %v, got %v", tc.err, err)
