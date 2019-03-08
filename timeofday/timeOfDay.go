@@ -176,14 +176,12 @@ func fmtFrac(v uint64) string {
 // Add adds the specified duration to t, normalizing the result to [00:00:00...24:00:00)
 func (t Value) Add(d time.Duration) Value {
 	res := time.Duration(t.d + d)
-	// for a positive result, step backwards until we're within the supported range
+	// adjust the result until we're within the supported range
+	if res < 0 {
+		res = (24 * time.Hour) - ((-1 * res) % (24 * time.Hour))
+	}
 	if res >= 24*time.Hour {
 		res %= 24 * time.Hour
-	}
-	// for ; res > 24*time.Hour; res -= 24 * time.Hour {
-	// }
-	// for a negative result, step forward until we're within the supported range
-	for ; res < 0; res += 24 * time.Hour {
 	}
 	return Value{d: res}
 }
