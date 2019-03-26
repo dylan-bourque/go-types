@@ -10,21 +10,21 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Date represents a calendar date, stored as an integer value containing the number
+// Value represents a calendar date, stored as an integer value containing the number
 // of days since the beginning of the Julian calendar, 1/1/1753
-type Date int64
+type Value int64
 
 var (
 	// Nil represents a nil/null/undefined date
-	Nil = Date(-2)
+	Nil = Value(-2)
 	// NilUnit represents the year, month and day unit values for date.Nil
 	NilUnit = -2
 	// Min represents the minimum supported date value, which is day 0 on the Julian calendar or
 	// 1/1/1753 on the Gregorian calendar.
-	Min = Date(2361331)
+	Min = Value(2361331)
 	// Max represents the maximum supported date value, which is day 3012153 on the Julian calendar or
 	// 12/31/9999 on the Gregorian calendar.
-	Max = Date(5373484)
+	Max = Value(5373484)
 )
 
 var (
@@ -76,14 +76,14 @@ func julianToGregorian(v int64) (y, m, d int) {
 	return y, m, d
 }
 
-// FromTime returns a Date value that is equivalent to the date portion of the specified time.Time value
-func FromTime(t time.Time) (Date, error) {
+// FromTime returns a Value value that is equivalent to the date portion of the specified time.Time value
+func FromTime(t time.Time) (Value, error) {
 	y, m, d := t.Date()
 	return FromUnits(y, int(m), d)
 }
 
-// FromUnits returns a Date value that is equivalent to the specified date units
-func FromUnits(y, m, d int) (Date, error) {
+// FromUnits returns a Value value that is equivalent to the specified date units
+func FromUnits(y, m, d int) (Value, error) {
 	if y == -2 && m == -2 && d == -2 {
 		return Nil, nil
 	}
@@ -92,12 +92,20 @@ func FromUnits(y, m, d int) (Date, error) {
 		return Nil, ErrInvalidDateUnit
 	}
 
-	return Date(gregorianToJulian(y, m, d)), nil
+	return Value(gregorianToJulian(y, m, d)), nil
+}
+
+func (v Value) ToTime() time.Time {
+	if v == Nil {
+		return time.Time{}
+	}
+	y, m, d := ToUnits(v)
+	return time.Date(y, time.Month(m), d, 0, 0, 0, 0, time.UTC)
 }
 
 // ToUnits returns the year, month and day components, on the Gregorian calendar,
 // of the specified date
-func ToUnits(d Date) (year, month, day int) {
+func ToUnits(d Value) (year, month, day int) {
 	if d == Nil {
 		return -2, -2, -2
 	}
@@ -105,7 +113,7 @@ func ToUnits(d Date) (year, month, day int) {
 }
 
 // Year returns the year (between 1753 and 9999) or date.NilUnit if this is a nil date
-func (dt Date) Year() int {
+func (dt Value) Year() int {
 	if dt == Nil {
 		return -2
 	}
@@ -113,7 +121,7 @@ func (dt Date) Year() int {
 	return y
 }
 
-func (dt Date) Month() int {
+func (dt Value) Month() int {
 	if dt == Nil {
 		return -2
 	}
@@ -121,7 +129,7 @@ func (dt Date) Month() int {
 	return m
 }
 
-func (dt Date) Day() int {
+func (dt Value) Day() int {
 	if dt == Nil {
 		return -2
 	}

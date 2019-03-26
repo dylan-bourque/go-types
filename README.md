@@ -11,7 +11,7 @@ This table contains a summary of the types provided by this package.  See the su
 | Type | Description |
 |------|-------------|
 | [`timeofday.Value`](timeofday/README.md) | A type that represents a specific time of day - in the range [00:00:00 .. 23:59:59.999999999) - independent of date, time zone and Daylight Savings Time concerns. |
-| [`date.Date`](date/README.md) | A type that represents a calendar date with no time component, which is useful for avoiding the vaguaries of what _one day_ means after considering time zones and Daylight Savings Time.|
+| [`date.Value`](date/README.md) | A type that represents a calendar date with no time component, which is useful for avoiding the vaguaries of what _one day_ means after considering time zones and Daylight Savings Time.|
 
 ### Installation
 
