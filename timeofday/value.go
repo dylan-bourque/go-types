@@ -118,19 +118,19 @@ func FromDuration(d time.Duration) (Value, error) {
 	return Value{d: d}, nil
 }
 
-// ToDateTimeUTC composes a clock.Value value with the specified year, month and day
+// ToDateTimeUTC composes a timeofday.Value value with the specified year, month and day
 // in the UTC time zone.
 func (t Value) ToDateTimeUTC(year int, month time.Month, day int) time.Time {
 	return t.ToDateTimeInLocation(year, month, day, time.UTC)
 }
 
-// ToDateTimeLocal composes a clock.Value value with the specified year, month and day
+// ToDateTimeLocal composes a timeofday.Value value with the specified year, month and day
 // in the current local time zone.
 func (t Value) ToDateTimeLocal(year int, month time.Month, day int) time.Time {
 	return t.ToDateTimeInLocation(year, month, day, time.Local)
 }
 
-// ToDateTimeInLocation composes the current clock.Value value with the specified year, month, day and
+// ToDateTimeInLocation composes the current timeofday.Value value with the specified year, month, day and
 // location/time zone to generate a full time.Time value.
 func (t Value) ToDateTimeInLocation(year int, month time.Month, day int, loc *time.Location) time.Time {
 	h, m, s, ns := t.ToUnits()
@@ -146,6 +146,25 @@ func (t Value) String() string {
 		result += fmtFrac(uint64(ns))
 	}
 	return result
+}
+
+// FromDurationString constructs a value from the specified duration string
+func FromDurationString(s string) (Value, error) {
+	d, err := time.ParseDuration(s)
+	if err != nil {
+		return Zero, errors.Wrapf(err, "Invalid duration string: %s", s)
+	}
+	return FromDuration(d)
+}
+
+// FromTimeString constructs a Value value from the specified time of day string
+func FromTimeString(s string) (Value, error) {
+	t, err := time.Parse("15:04:05.999999999", s)
+	if err != nil {
+		return Zero, errors.Wrapf(err, "Invalid time of day string: %s", s)
+	}
+	hr, min, sec := t.Clock()
+	return FromUnits(hr, min, sec, int64(t.Nanosecond()))
 }
 
 // fmtFrac formats the fraction of v/10**9 (e.g., ".12345") into a string, omitting trailing zeros.

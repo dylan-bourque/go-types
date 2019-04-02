@@ -7,6 +7,7 @@ package timeofday
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 	"testing"
 	"time"
 
@@ -349,6 +350,71 @@ func TestToDuration(t *testing.T) {
 		t.Run(tc.name, func(tt *testing.T) {
 			got := ToDuration(tc.t)
 			if got != tc.expected {
+				tt.Errorf("Expected %v, got %v", tc.expected, got)
+			}
+		})
+	}
+}
+
+func TestFromDurationString(t *testing.T) {
+	getErrorMsg := func(err error) string {
+		if err == nil {
+			return ""
+		}
+		return err.Error()
+	}
+	cases := []struct {
+		name     string
+		s        string
+		errMsg   string
+		expected Value
+	}{
+		{"empty string", "", "Invalid duration string", Zero},
+		{"negative duration", "-1s", "outside the valid range", Zero},
+		{"positive overflow", "24h", "outside the valid range", Zero},
+		{"minimum value", "0s", "", Zero},
+		{"maximum value", "23h59m59s999999999ns", "", Max},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(tt *testing.T) {
+			got, err := FromDurationString(tc.s)
+			em := getErrorMsg(err)
+			if !strings.Contains(em, tc.errMsg) {
+				tt.Errorf("Expected error %q, got %q", tc.errMsg, em)
+			}
+			if tc.expected != got {
+				tt.Errorf("Expected %v, got %v", tc.expected, got)
+			}
+		})
+	}
+}
+
+func TestFromTimeString(t *testing.T) {
+	getErrorMsg := func(err error) string {
+		if err == nil {
+			return ""
+		}
+		return err.Error()
+	}
+	cases := []struct {
+		name     string
+		s        string
+		errMsg   string
+		expected Value
+	}{
+		{"empty string", "", "Invalid time of day string", Zero},
+		{"invalid string", "xx!*{", "Invalid time of day string", Zero},
+		{"minimum value", "00:00:00", "", Zero},
+		{"maximum value", "23:59:59.999999999", "", Max},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(tt *testing.T) {
+			got, err := FromTimeString(tc.s)
+			em := getErrorMsg(err)
+			if !strings.Contains(em, tc.errMsg) {
+				tt.Errorf("Expected error %q, got %q", tc.errMsg, em)
+			}
+			if tc.expected != got {
 				tt.Errorf("Expected %v, got %v", tc.expected, got)
 			}
 		})
