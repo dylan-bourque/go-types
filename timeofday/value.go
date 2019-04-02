@@ -148,8 +148,8 @@ func (t Value) String() string {
 	return result
 }
 
-// FromDurationString constructs a value from the specified duration string
-func FromDurationString(s string) (Value, error) {
+// ParseDuration constructs a value from the specified duration string
+func ParseDuration(s string) (Value, error) {
 	d, err := time.ParseDuration(s)
 	if err != nil {
 		return Zero, errors.Wrapf(err, "Invalid duration string: %s", s)
@@ -157,8 +157,8 @@ func FromDurationString(s string) (Value, error) {
 	return FromDuration(d)
 }
 
-// FromTimeString constructs a Value value from the specified time of day string
-func FromTimeString(s string) (Value, error) {
+// ParseTime constructs a Value value from the specified time of day string
+func ParseTime(s string) (Value, error) {
 	t, err := time.Parse("15:04:05.999999999", s)
 	if err != nil {
 		return Zero, errors.Wrapf(err, "Invalid time of day string: %s", s)

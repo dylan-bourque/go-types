@@ -377,7 +377,7 @@ func TestFromDurationString(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(tt *testing.T) {
-			got, err := FromDurationString(tc.s)
+			got, err := ParseDuration(tc.s)
 			em := getErrorMsg(err)
 			if !strings.Contains(em, tc.errMsg) {
 				tt.Errorf("Expected error %q, got %q", tc.errMsg, em)
@@ -409,7 +409,7 @@ func TestFromTimeString(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(tt *testing.T) {
-			got, err := FromTimeString(tc.s)
+			got, err := ParseTime(tc.s)
 			em := getErrorMsg(err)
 			if !strings.Contains(em, tc.errMsg) {
 				tt.Errorf("Expected error %q, got %q", tc.errMsg, em)
