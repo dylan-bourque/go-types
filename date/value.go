@@ -20,10 +20,10 @@ var (
 	// NilUnit represents the year, month and day unit values for date.Nil
 	NilUnit = -2
 	// Min represents the minimum supported date value, which is day 0 on the Julian calendar or
-	// 1/1/1753 on the Gregorian calendar.
+	// 1753-01-01 on the Gregorian calendar.
 	Min = Value(2361331)
 	// Max represents the maximum supported date value, which is day 3012153 on the Julian calendar or
-	// 12/31/9999 on the Gregorian calendar.
+	// 9999-12-31 on the Gregorian calendar.
 	Max = Value(5373484)
 )
 
@@ -76,6 +76,25 @@ func julianToGregorian(v int64) (y, m, d int) {
 	return y, m, d
 }
 
+// Must panics if the passed-in error is non-nil; otherwise, it returns the passed-in date.Value
+func Must(v Value, err error) Value {
+	if err != nil {
+		panic(err)
+	}
+	return v
+}
+
+// Equal returns true if the specified date.Value values are equal (represent the same date) and false if they do not.
+func Equal(v1, v2 Value) bool {
+	return int64(v1) == int64(v2)
+}
+
+// Equal returns true if the specified date.Value value is equal to the receiver (represent the same date)
+// and false if it is not.
+func (v Value) Equal(v2 Value) bool {
+	return Equal(v, v2)
+}
+
 // FromTime returns a Value value that is equivalent to the date portion of the specified time.Time value
 func FromTime(t time.Time) (Value, error) {
 	y, m, d := t.Date()
@@ -84,10 +103,7 @@ func FromTime(t time.Time) (Value, error) {
 
 // FromUnits returns a Value value that is equivalent to the specified date units
 func FromUnits(y, m, d int) (Value, error) {
-	if y == -2 && m == -2 && d == -2 {
-		return Nil, nil
-	}
-	// TODO: validate unit values
+	// validate unit values
 	if !isValidUnits(y, m, d) {
 		return Nil, ErrInvalidDateUnit
 	}
@@ -95,6 +111,8 @@ func FromUnits(y, m, d int) (Value, error) {
 	return Value(gregorianToJulian(y, m, d)), nil
 }
 
+// ToTime returns a time.Time instance with the year, month and day fields populated from the receiver
+// and the time portion set to midnight UTC
 func (v Value) ToTime() time.Time {
 	if v == Nil {
 		return time.Time{}
@@ -112,41 +130,49 @@ func ToUnits(d Value) (year, month, day int) {
 	return julianToGregorian(int64(d))
 }
 
-// Year returns the year (between 1753 and 9999) or date.NilUnit if this is a nil date
+// Year returns the year (between 1753 and 9999) or 0 if this is a nil date
 func (dt Value) Year() int {
 	if dt == Nil {
-		return -2
+		return 0
 	}
 	y, _, _ := ToUnits(dt)
 	return y
 }
 
+// Month returns the month (between 1 and 12) or 0 if this is a nil date
 func (dt Value) Month() int {
 	if dt == Nil {
-		return -2
+		return 0
 	}
 	_, m, _ := ToUnits(dt)
 	return m
 }
 
+// Day returns the day of the month (between 1 and 31) or 0 if this is a nil date
 func (dt Value) Day() int {
 	if dt == Nil {
-		return -2
+		return 0
 	}
 	_, _, d := ToUnits(dt)
 	return d
+}
+
+// IsValid returns true if the specified date.Value is valid (between date.Min and date.Max, inclusive)
+// and false if it is not.
+func IsValid(d Value) bool {
+	return Min <= d && d <= Max
 }
 
 func isValidUnits(y, m, d int) bool {
 	return y >= 1753 && y <= 9999 && m > 0 && m < 13 && d > 0 && d <= daysInMonth(y, m)
 }
 func isLeapYear(y int) bool {
-	return (y%4) == 0 && (y%100) != 0 && (y%400) == 0
+	return ((y%4) == 0 && (y%100) != 0) || ((y % 400) == 0)
 }
 
 func daysInMonth(y, m int) int {
 	d := baseDaysInMonth[m]
-	if isLeapYear(y) {
+	if m == 2 && isLeapYear(y) {
 		d++
 	}
 	return d
