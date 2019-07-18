@@ -30,7 +30,7 @@ func TestFromUnits(tt *testing.T) {
 		{"non-leap year/02-29", 1997, 2, 29, false},
 	}
 	for m := 1; m < 13; m++ {
-		for d := 1; d < 31; d++ {
+		for d := 1; d <= 31; d++ {
 			if m == 2 && d > 28 {
 				continue
 			}
@@ -103,7 +103,7 @@ func TestFromTime(t *testing.T) {
 				if err != nil {
 					tt.Errorf("Unexpected error: %v", err)
 				}
-				if !got.Equal(c.expected) {
+				if !got.Equals(c.expected) {
 					tt.Errorf("Unexpected result: expected %v, got %v", c.expected, got)
 				}
 			} else {
