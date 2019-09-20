@@ -56,7 +56,7 @@ func FromTime(t time.Time) (Value, error) {
 // FromUnits returns a Value value that is equivalent to the specified date units
 func FromUnits(y, m, d int) (Value, error) {
 	// validate unit values
-	if !isValidUnits(y, m, d) {
+	if !IsValidUnits(y, m, d) {
 		return Nil, ErrInvalidDateUnit
 	}
 
@@ -66,7 +66,7 @@ func FromUnits(y, m, d int) (Value, error) {
 // ToTime returns a time.Time instance with the year, month and day fields populated from the receiver
 // and the time portion set to midnight UTC
 func (v Value) ToTime() time.Time {
-	if v == Nil {
+	if !v.IsValid() {
 		return time.Time{}
 	}
 	y, m, d := ToUnits(v)
@@ -78,6 +78,9 @@ func (v Value) ToTime() time.Time {
 func ToUnits(d Value) (year, month, day int) {
 	if d == Nil {
 		return NilUnit, NilUnit, NilUnit
+	}
+	if !d.IsValid() {
+		return -1, -1, -1
 	}
 	return julianToGregorian(int64(d))
 }
@@ -186,20 +189,237 @@ func Parse(layout, value string) (Value, error) {
 	return FromTime(t)
 }
 
-func isValidUnits(y, m, d int) bool {
-	return y >= 1753 && y <= 9999 && m > 0 && m < 13 && d > 0 && d <= daysInMonth(y, m)
-}
-
-func isLeapYear(y int) bool {
-	return ((y%4) == 0 && (y%100) != 0) || ((y % 400) == 0)
-}
-
-func daysInMonth(y, m int) int {
+// DaysInMonth returns the number of days in the specified month, accounting for leap years.
+//
+// If the specified year or month or outside the range of valid values, NilUnit is returned.
+func DaysInMonth(y, m int) int {
+	if !IsValidYear(y) || !IsValidMonth(m) {
+		return NilUnit
+	}
 	d := baseDaysInMonth[m]
-	if m == 2 && isLeapYear(y) {
+	if m == 2 && IsLeapYear(y) {
 		d++
 	}
 	return d
+}
+
+// DaysInYear returns the number of days in the specified year, accounting for leap years.
+//
+// If the specified year is outside the range of valid values, NilUnit is returned.
+func DaysInYear(y int) int {
+	if !IsValidYear(y) {
+		return NilUnit
+	}
+	n := 365
+	if IsLeapYear(y) {
+		n += 1
+	}
+	return n
+}
+
+// StartOfYear returns a new date.Value that represents the first day of the
+// year for the date represented by d.
+//
+// If the receiver is date.Nil, this method return date.Nil
+func (d Value) StartOfYear() Value {
+	if !d.IsValid() {
+		return Nil
+	}
+	y, _, _ := ToUnits(d)
+	v, _ := FromUnits(y, 1, 1)
+	return v
+}
+
+// MiddleOfYear returns a new date.Value that represents the middle day of the
+// year - defined as June 30 - for the date represented by d.
+//
+// If the receiver is date.Nil, this method return date.Nil
+func (d Value) MiddleOfYear() Value {
+	if !d.IsValid() {
+		return Nil
+	}
+	y, _, _ := ToUnits(d)
+	v, _ := FromUnits(y, 6, 30)
+	return v
+}
+
+// EndOfYear returns a new date.Value that represents the last day of the
+// year for the date represented by d.
+//
+// If the receiver is date.Nil, this method return date.Nil
+func (d Value) EndOfYear() Value {
+	if !d.IsValid() {
+		return Nil
+	}
+	y, _, _ := ToUnits(d)
+	v, _ := FromUnits(y, 12, 31)
+	return v
+}
+
+// StartOfMonth returns a new date.Value that represents the first day of the
+// month for the date represented by d.
+//
+// If the receiver is date.Nil, this method return date.Nil
+func (d Value) StartOfMonth() Value {
+	if !d.IsValid() {
+		return Nil
+	}
+	y, m, _ := ToUnits(d)
+	v, _ := FromUnits(y, m, 1)
+	return v
+}
+
+// MiddleOfMonth returns a new date.Value that represents the "middle" day -
+// defined as <days in month>/2 - of the month for the date represented by d.
+//
+// If the receiver is date.Nil, this method return date.Nil
+func (d Value) MiddleOfMonth() Value {
+	if !d.IsValid() {
+		return Nil
+	}
+	y, m, _ := ToUnits(d)
+	v, _ := FromUnits(y, m, DaysInMonth(y, m)/2)
+	return v
+}
+
+// EndOfMonth returns a new date.Value that represents the last day of the
+// month for the date represented by d.
+//
+// If the receiver is date.Nil, this method return date.Nil
+func (d Value) EndOfMonth() Value {
+	if !d.IsValid() {
+		return Nil
+	}
+	y, m, _ := ToUnits(d)
+	v, _ := FromUnits(y, m, DaysInMonth(y, m))
+	return v
+}
+
+// NextMonth returns a new date.Value that represents the same day on a subsequent
+// month.
+//
+// If the receiver is date.Nil, this method returns date.Nil
+func (d Value) NextMonth(m int) (Value, error) {
+	if !d.IsValid() {
+		return Nil, nil
+	}
+	yr, mon, day := ToUnits(d)
+	if m <= mon {
+		yr++
+	}
+	return FromUnits(yr, m, day)
+}
+
+// NextWeekday returns a new date.Value that represents a subsequent week day relative
+// to the current date.
+//
+// If the receiver is date.Nil, this method returns date.Nil
+func (d Value) NextWeekday(wd time.Weekday) (Value, error) {
+	if !d.IsValid() {
+		return Nil, nil
+	}
+	delta := int(wd - d.Weekday())
+	if delta <= 0 {
+		delta += 7
+	}
+	return d.AddDays(delta)
+}
+
+// NextYear returns a new date.Value that represents the same month and day on a subsequent
+// year relative to the current date.
+//
+// If the receiver is date.Nil, this method returns date.Nil
+func (d Value) NextYear(yy int) (Value, error) {
+	if !d.IsValid() {
+		return Nil, nil
+	}
+	if !IsValidYear(yy) {
+		return Nil, errors.Errorf("invalid year unit value: %d", yy)
+	}
+	yr, mon, day := ToUnits(d)
+	if yr > yy {
+		return Nil, errors.Errorf("the specified year, %d, is before the current year", yy)
+	}
+	return FromUnits(yy, mon, day)
+}
+
+// PreviousWeekday returns a new date.Value that represents a prior weekday relative to the current
+// date.
+//
+// If the receiver is date.Nil, this method returns date.Nil
+func (d Value) PreviousWeekday(w time.Weekday) (Value, error) {
+	if !d.IsValid() {
+		return Nil, nil
+	}
+	delta := int(w - d.ToTime().Weekday())
+	if delta >= 0 {
+		delta -= 7
+	}
+	return d.AddDays(delta)
+}
+
+// Weekday returns the date of the week represented by the current date.
+//
+// If the receiver is date.Nil, this method returns -1
+func (d Value) Weekday() time.Weekday {
+	if !d.IsValid() {
+		return -1
+	}
+	return d.ToTime().Weekday()
+}
+
+// AddDays adds the specified number of days to the current date.
+//
+// If the receiver is date.Nil, this method returns date.Nil and no error
+func (d Value) AddDays(n int) (Value, error) {
+	if !d.IsValid() {
+		return Nil, nil
+	}
+	v := int64(d) + int64(n)
+	if v < int64(Min) || v > int64(Max) {
+		return Nil, errors.Errorf("adding %d days would generate in an out-of-range result", n)
+	}
+	return Value(v), nil
+}
+
+// Add adds the specified duration to the current date.
+//
+// Because date.Value has no concept of time, any "partial" day information will be
+// discarded in the result.
+func (d Value) Add(dur time.Duration) Value {
+	v, err := FromTime(d.ToTime().Add(dur))
+	if err != nil {
+		return Nil
+	}
+	return v
+}
+
+// IsValidUnits returns a value indicating whether or not the specified combination of
+// date unit values represent a valid date.
+func IsValidUnits(y, m, d int) bool {
+	return IsValidYear(y) && IsValidMonth(m) && d > 0 && d <= DaysInMonth(y, m)
+}
+
+// IsValidYear returns a value indicating whether or not the specified year falls within
+// the range of supported values: 1753 to 9999, inclusive.
+func IsValidYear(y int) bool {
+	return y >= 1753 && y <= 9999
+}
+
+// IsValidMonth returns a value indicating whether or not the specified month falls within
+// the range of supported values: 1 to 12, inclusive.
+func IsValidMonth(m int) bool {
+	return m > 0 && m < 13
+}
+
+// IsLeapYear returns a value indicating whether or not the specified year is a leap year.
+//
+// A leap year is defined as being divisible by 4, but not divisible by 100 unless it is
+// also divisible by 400.
+//
+// This function always returns false for an invalid year value.
+func IsLeapYear(y int) bool {
+	return IsValidYear(y) && (((y%4) == 0 && (y%100) != 0) || ((y % 400) == 0))
 }
 
 func gregorianToJulian(y, m, d int) (result int64) {
